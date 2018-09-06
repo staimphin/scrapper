@@ -6,8 +6,5 @@
 //connect to URL
 $scrapper = new scrapper($args);
 
-//retrieve specifics part of the page
-//$scrapper->getPage();
-
 // return scrapped data as json
-$scrapper->getMesg();
+echo $scrapper->retrieveData();

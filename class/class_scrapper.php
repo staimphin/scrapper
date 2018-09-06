@@ -1,15 +1,18 @@
 <?php
-/** * Simple page scrapper * * @author : gregory.staimphin@gmail.com * @date:  2018-09-06 */
+/** * Simple page scrapper *
+ * Scrapper is designed for retrieving some data from an URL (For example the news of a webpage)
+ * and provide the result in  JSON format.
+ * @version: V0.1 * @author : gregory.staimphin@gmail.com * @date:  2018-09-06 */
  
  class scrapper {
 	private $curl;//CURL instance
 	private $json = array();
 	private $mesg = array();
 	private $opts;//Curl Options
-//	private $jsonKeys = array();//the output keys for the json file.
 	private $source;//Source code to scrap
 	private $scrapped = array();//retrieved data
-	private $allowedKeys = array('wrapper', 'search','target_wrapper');
+	private $allowedKeys = array('wrapper', 'search','target_wrapper');// List of expected key in $arg
+
 	/**
 	 *
 	 * Init the curl instance
@@ -33,8 +36,23 @@
 	 * @var $arg:  array
 	 * Contain the URL of the source
 	 *
-	 * @var example: 
-	 * [ 'URL' => 'https://google.com',
+	 * @fornat: 
+	 * $args = array(
+	 * 'URL' => '',// Source URL
+	 *	array(
+	 *		'tag' => '',//HTML tag of the target's wrapper : More likely to be a section / div / ul
+	 *		'identifier' => '' // Element ID or class name of the wrapper
+	 *	),
+	 * 'target_wrapper' => '',//HML tag of targeted list: for example dl / li 
+	 * 'search' => //labeled array: the researched keys will be used in the generated JSON. Search is not limited to the following arguments.
+	 *	array(
+	 *		'date' => '', // Date builtin patern: will perform a research for a date YYYY.?MM.?DD after the specified argument
+	 *		'label' => '',// Label builtin patern: will perform a research for a value between inside a doublequote  after the speified argument
+	 *		'url' => '',// URL builtin patern: will perform a research for the href attribute after the speified argument
+	 *		'description' => '',// Generic patern: will perform a research for the content enclosed within the specified html tag
+	 *		//  any additional key will perform a research for the content enclosed within the specified html tag
+	 *	),
+	 *);
 	 *
 	 *
 	 */
@@ -94,23 +112,16 @@
 
 	/**
 	 *
-	 * retrieve specific bloc from source code
-	 *
+	 * retrieve the content of a specificied html tag bloc from source code
+	 *  
+	 * @var pattern: regular expression
 	 *
 	 */
 	public function scrapSource($pattern )
 	{
 		preg_match_all($pattern, $this->source, $matches);
-		//Put the results
+		//Save the results
 		$this->scrapped = !empty($matches[0]) ? $matches[0] : array();
-	}
-
-	
-	/**	 *	 * display the result of the process	 *	 *	 */
-	public function getMesg()
-	{
-		//$this->retrieveData();
-		echo $this->retrieveData();
 	}
 
 	/**	 *	 *	 * @return: returns a JSON  data	 *	 */
@@ -118,7 +129,6 @@
 	{
 		//get source
 		$this->getPage();
-		//print_r($this->search);
 		// need to split the data into an array of target
 		
 		$pattern		= '@<'. $this->target_wrapper.'[^>]+>.*</'. $this->target_wrapper.'>@Umsix';
@@ -132,8 +142,8 @@
 		if(!empty($this->json)){
 			$JSON = json_encode($this->json);
 		} else {
-			$this->mesg[] = 'No results';
-			$JSON['error'] = json_encode($this->mesg);
+			$this->mesg['error'] = 'No results';
+			$JSON = json_encode($this->mesg);
 		}
 		
 		return $JSON;
@@ -167,7 +177,7 @@
 				preg_match($pattern, $data, $matches);
 				$tmp[$key] = !empty($matches[1]) ?  $matches[1] :'';
 		}
-		//custom: removing the - from the laebl
+		//custom: removing the - from the label
 		if(!empty($tmp['label'])){
 			$tmp['label'] = str_replace( '-','',$tmp['label']);
 		}
@@ -178,7 +188,6 @@
 
 		return $tmp;
 	}
-
 
  }
  
